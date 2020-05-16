@@ -10,43 +10,41 @@ object ZipCompress {
 
   sealed private[this] trait Command
 
-  private[this] case object OpenZipFile extends Command
-
   private[this] case class StartEntry(name: String, zip: ZipOutputStream) extends Command
-
-  private[this] case object Noop extends Command
 
   private[this] case class AddDataToZipEntry(data: Chunk[Byte], zip: ZipOutputStream) extends Command
 
   private[this] case class EndEntry(name: String, zip: ZipOutputStream) extends Command
 
-  private[this] case class CloseZipFile(zip: ZipOutputStream) extends Command
+  private[this] case class EndFile(zip: ZipOutputStream) extends Command
+
 
   def zip(chunkSize: Int = ZStreamChunk.DefaultChunkSize): Pipe[ZipEntry, Chunk[Byte]] = { sources =>
-    val buf       = new ByteArrayOutputStream(chunkSize)
-    val zipStream = new ZipOutputStream(buf)
+    (for {
+      baos <- Managed.fromAutoCloseable(Task(new ByteArrayOutputStream(chunkSize)))
+      zis <- Managed.fromAutoCloseable(Task(new ZipOutputStream(baos)))
+    } yield baos -> zis).toStream.flatMap{ case (baos, zipStream) =>
 
-    def nextZipChunk(): Task[Chunk[Byte]] = Task {
-      val zippedData = buf.toByteArray
-      buf.reset()
-      Chunk.fromArray(zippedData)
-    }
+      def nextZipChunk: Task[Chunk[Byte]] = Task {
+        val zippedData = baos.toByteArray
+        baos.reset()
+        Chunk.fromArray(zippedData)
+      }
 
-    (Stream(OpenZipFile) ++ sources.flatMap { zipSource =>
-      Stream(StartEntry(zipSource._1, zipStream)) ++
-        zipSource._2.map(AddDataToZipEntry(_, zipStream)).intersperse(Noop) ++
-        Stream(EndEntry(zipSource._1, zipStream))
-    } ++ Stream(CloseZipFile(zipStream))).mapM {
-      case OpenZipFile | Noop =>
-        Task.effectTotal(Chunk.empty)
-      case StartEntry(filePath, zip) =>
-        Task(zip.putNextEntry(new JZipEntry(filePath))) *> nextZipChunk()
-      case AddDataToZipEntry(data, zip) =>
-        Task(zip.write(data.toArray)) *> nextZipChunk()
-      case EndEntry(_, zip) =>
-        Task(zip.closeEntry()) *> nextZipChunk()
-      case CloseZipFile(zip) =>
-        Task(zip.close()) *> nextZipChunk()
+        sources.flatMap { case (fileName, content) =>
+          Stream(StartEntry(fileName, zipStream)) ++
+            content.map(AddDataToZipEntry(_, zipStream)) ++
+            Stream(EndEntry(fileName, zipStream)) ++
+            Stream(EndFile(zipStream))
+        }.mapM {
+        case StartEntry(filePath, zip) =>
+          Task(zip.putNextEntry(new JZipEntry(filePath))) *> nextZipChunk
+        case AddDataToZipEntry(data, zip) =>
+          Task(zip.write(data.toArray)) *> nextZipChunk
+        case EndEntry(_, zip) =>
+          Task(zip.closeEntry()) *> nextZipChunk
+        case EndFile(zip) => Task(zip.finish()) *> nextZipChunk
+      }
     }
   }
 
@@ -62,8 +60,6 @@ object ZipCompress {
         entry(zis0).map(_.map(_ -> zis0))
       }
 
-    val managed: Managed[Throwable, ZipInputStream] =
-      stream.toInputStream.flatMap(is => Managed.makeEffect(new ZipInputStream(is))(_.close))
-    Stream.managed(managed).flatMap(unzipEntries)
+    stream.toInputStream.mapM(is => Task(new ZipInputStream(is))).toStream.flatMap(unzipEntries)
   }
 }
