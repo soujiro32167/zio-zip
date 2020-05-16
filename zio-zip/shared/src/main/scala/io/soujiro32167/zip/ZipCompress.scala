@@ -31,12 +31,12 @@ object ZipCompress {
         Chunk.fromArray(zippedData)
       }
 
-        sources.flatMap { case (fileName, content) =>
+      (sources.flatMap { case (fileName, content) =>
           Stream(StartEntry(fileName, zipStream)) ++
             content.map(AddDataToZipEntry(_, zipStream)) ++
-            Stream(EndEntry(fileName, zipStream)) ++
-            Stream(EndFile(zipStream))
-        }.mapM {
+            Stream(EndEntry(fileName, zipStream))
+        } ++ Stream(EndFile(zipStream))).tap(c => Task(println(c)))
+          .mapM {
         case StartEntry(filePath, zip) =>
           Task(zip.putNextEntry(new JZipEntry(filePath))) *> nextZipChunk
         case AddDataToZipEntry(data, zip) =>
