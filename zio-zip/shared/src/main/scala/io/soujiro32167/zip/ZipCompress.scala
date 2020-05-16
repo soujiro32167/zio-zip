@@ -60,6 +60,6 @@ object ZipCompress {
         entry(zis0).map(_.map(_ -> zis0))
       }
 
-    stream.toInputStream.mapM(is => Task(new ZipInputStream(is))).toStream.flatMap(unzipEntries)
+    stream.toInputStream.flatMap(is => Managed.fromAutoCloseable(Task(new ZipInputStream(is)))).toStream.flatMap(unzipEntries)
   }
 }
