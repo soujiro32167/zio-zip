@@ -27,7 +27,7 @@ inThisBuild(
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
-val zioVersion = "1.0.0-RC18-2"
+val zioVersion = "1.0.0-RC20"
 
 lazy val root = project
   .in(file("."))
@@ -49,6 +49,7 @@ lazy val zioZip = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio"          % zioVersion,
       "dev.zio" %% "zio-streams" % zioVersion,
+      "dev.zio" %% "zio-nio"     % "1.0.0-RC8",
       "dev.zio" %% "zio-test"     % zioVersion % "test",
       "dev.zio" %% "zio-test-sbt" % zioVersion % "test"
     )
