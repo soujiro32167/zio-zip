@@ -14,7 +14,7 @@ ThisBuild / developers := List(
   Developer("janedoe", "Jane Doe", "@janedoe", url("https://github.com/janedoe"))
 )
 
-ThisBuild / githubOwner := "soujiro32167"
+ThisBuild / githubOwner      := "soujiro32167"
 ThisBuild / githubRepository := "zio-zip"
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
