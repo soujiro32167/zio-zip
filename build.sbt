@@ -4,24 +4,14 @@ val scala213 = "2.13.8"
 val scala3   = "3.1.3"
 
 ThisBuild / organization := "dev.zio"
-ThisBuild / version := "0.0.1"
+ThisBuild / version      := "0.0.1"
 ThisBuild / scalaVersion := "2.13.8"
-ThisBuild / homepage := Some(url("https://zio.github.io/zio-zip"))
-ThisBuild / description := "A ZIP compression lib for ZIO"
+ThisBuild / homepage     := Some(url("https://zio.github.io/zio-zip"))
+ThisBuild / description  := "A ZIP compression lib for ZIO"
 ThisBuild / licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 ThisBuild / developers := List(
-  Developer(
-    "johnDoe",
-    "John Doe",
-    "@johndoe",
-    url("https://github.com/johndoe")
-  ),
-  Developer(
-    "janedoe",
-    "Jane Doe",
-    "@janedoe",
-    url("https://github.com/janedoe")
-  )
+  Developer("johnDoe", "John Doe", "@johndoe", url("https://github.com/johndoe")),
+  Developer("janedoe", "Jane Doe", "@janedoe", url("https://github.com/janedoe"))
 )
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
@@ -36,25 +26,27 @@ lazy val `zio-zip-core` = (project in file("zio-zip-core"))
       `dev.zio`.zio.`test-sbt`,
       `dev.zio`.zio.`zio-streams`
     ),
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    crossScalaVersions := Seq(scala213, scala3),
+    testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    crossScalaVersions := Seq(scala213, scala3)
   )
 
 lazy val `zio-zip-docs` = project
   .in(file("zio-zip-docs"))
   .settings(
     publish / skip := true,
-    moduleName := "zio-zip-docs",
+    moduleName     := "zio-zip-docs",
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
-    libraryDependencies ++= Seq(
-      `dev.zio`.zio.zio
-    ),
+    libraryDependencies ++= Seq(`dev.zio`.zio.zio),
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(`zio-zip-core`),
     ScalaUnidoc / unidoc / target := (LocalRootProject / baseDirectory).value / "website" / "static" / "api",
     cleanFiles += (ScalaUnidoc / unidoc / target).value,
-    docusaurusCreateSite := docusaurusCreateSite.dependsOn(Compile / unidoc).value,
-    docusaurusPublishGhpages := docusaurusPublishGhpages.dependsOn(Compile / unidoc).value
+    docusaurusCreateSite := docusaurusCreateSite
+      .dependsOn(Compile / unidoc)
+      .value,
+    docusaurusPublishGhpages := docusaurusPublishGhpages
+      .dependsOn(Compile / unidoc)
+      .value
   )
   .dependsOn(`zio-zip-core`)
   .enablePlugins(MdocPlugin, DocusaurusPlugin, ScalaUnidocPlugin)
