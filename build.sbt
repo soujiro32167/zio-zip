@@ -3,22 +3,30 @@ import Dependencies._
 val scala213 = "2.13.8"
 val scala3   = "3.1.3"
 
-ThisBuild / organization := "dev.zio"
-ThisBuild / version      := "0.0.1"
-ThisBuild / scalaVersion := "2.13.8"
-ThisBuild / homepage     := Some(url("https://zio.github.io/zio-zip"))
+ThisBuild / organization := "io.soujiro32167"
+ThisBuild / scalaVersion := scala3
+// ThisBuild / homepage     := Some(url("https://zio.github.io/zio-zip"))
 ThisBuild / description  := "A ZIP compression lib for ZIO"
 ThisBuild / licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
-ThisBuild / developers := List(
-  Developer("johnDoe", "John Doe", "@johndoe", url("https://github.com/johndoe")),
-  Developer("janedoe", "Jane Doe", "@janedoe", url("https://github.com/janedoe"))
-)
+// ThisBuild / developers := List(
+//   Developer("johnDoe", "John Doe", "@johndoe", url("https://github.com/johndoe")),
+//   Developer("janedoe", "Jane Doe", "@janedoe", url("https://github.com/janedoe"))
+// )
 
 ThisBuild / githubOwner      := "soujiro32167"
 ThisBuild / githubRepository := "zio-zip"
-
+   
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
+
+lazy val `zio-zip` = (project in file("."))
+  .aggregate(`zio-zip-core`, `zio-zip-docs`)
+    .settings(
+    // crossScalaVersions must be set to Nil on the aggregating project
+    // https://www.scala-sbt.org/1.x/docs/Cross-Build.html#Cross+building+a+project
+    crossScalaVersions := Nil,
+    publish / skip     := true
+  )
 
 lazy val `zio-zip-core` = (project in file("zio-zip-core"))
   .settings(
