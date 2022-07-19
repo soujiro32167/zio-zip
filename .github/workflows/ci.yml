@@ -4,9 +4,9 @@ on:
   pull_request:
   push:
     branches: ['master']
-  release:
-    types:
-      - published
+  # release:
+  #   types:
+  #     - published
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -31,16 +31,16 @@ jobs:
     - name: Run tests
       run: sbt ++${{ matrix.scala }}! test
   
-  publish:
-    runs-on: ubuntu-20.04
-    if: github.event_name = 'release'
-    needs: [build]
-    steps:
-      - uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
-      - uses: olafurpg/setup-scala@v10
-      - run: sbt publish
+  # publish:
+  #   runs-on: ubuntu-20.04
+  #   if: github.event_name = 'release'
+  #   needs: [build]
+  #   steps:
+  #     - uses: actions/checkout@v2.3.4
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: olafurpg/setup-scala@v10
+  #     - run: sbt publish
 
   # publish:
   #   runs-on: ubuntu-20.04

@@ -5,16 +5,13 @@ val scala3   = "3.1.3"
 
 ThisBuild / organization := "io.soujiro32167"
 ThisBuild / scalaVersion := scala3
-// ThisBuild / homepage     := Some(url("https://zio.github.io/zio-zip"))
 ThisBuild / description  := "A ZIP compression lib for ZIO"
 ThisBuild / licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
-// ThisBuild / developers := List(
-//   Developer("johnDoe", "John Doe", "@johndoe", url("https://github.com/johndoe")),
-//   Developer("janedoe", "Jane Doe", "@janedoe", url("https://github.com/janedoe"))
-// )
+ThisBuild / developers := List(
+  Developer("soujiro32167", "Eli Kasik", "soujiro32167@gmail.com", url("https://github.com/soujiro32167")),
+)
 
-ThisBuild / githubOwner      := "soujiro32167"
-ThisBuild / githubRepository := "zio-zip"
+ThisBuild / resolvers += "jitpack" at "https://jitpack.io"
    
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
