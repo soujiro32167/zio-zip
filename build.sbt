@@ -16,15 +16,6 @@ ThisBuild / resolvers += "jitpack" at "https://jitpack.io"
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
-lazy val `zio-zip` = (project in file("."))
-  .aggregate(`zio-zip-core`, `zio-zip-docs`)
-  .settings(
-    // crossScalaVersions must be set to Nil on the aggregating project
-    // https://www.scala-sbt.org/1.x/docs/Cross-Build.html#Cross+building+a+project
-    crossScalaVersions := Nil,
-    publish / skip     := true
-  )
-
 lazy val `zio-zip-core` = (project in file("zio-zip-core"))
   .settings(
     name := "zio-zip",
@@ -38,11 +29,10 @@ lazy val `zio-zip-core` = (project in file("zio-zip-core"))
     crossScalaVersions := Seq(scala213, scala3)
   )
 
-lazy val `zio-zip-docs` = project
+lazy val docs = project
   .in(file("zio-zip-docs"))
   .settings(
     publish / skip := true,
-    moduleName     := "zio-zip-docs",
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
     libraryDependencies ++= Seq(`dev.zio`.zio.zio),
