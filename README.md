@@ -2,7 +2,7 @@
 
 | CI | Release | Snapshot | Discord |
 | --- | --- | --- | --- |
-| ![CI][Badge-CI] | [![Release Artifacts][Badge-SonatypeReleases]][Link-SonatypeReleases] | [![Snapshot Artifacts][Badge-SonatypeSnapshots]][Link-SonatypeSnapshots] | [![Badge-Discord]][Link-Discord] |
+| ![CI][Badge-CI] | [![](https://jitpack.io/v/soujiro32167/zio-zip.svg)](https://jitpack.io/#soujiro32167/zio-zip) | [![Snapshot Artifacts][Badge-SonatypeSnapshots]][Link-SonatypeSnapshots] | [![Badge-Discord]][Link-Discord] |
 
 # Summary
 
