@@ -8,17 +8,17 @@ ThisBuild / scalaVersion := scala3
 ThisBuild / description  := "A ZIP compression lib for ZIO"
 ThisBuild / licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 ThisBuild / developers := List(
-  Developer("soujiro32167", "Eli Kasik", "soujiro32167@gmail.com", url("https://github.com/soujiro32167")),
+  Developer("soujiro32167", "Eli Kasik", "soujiro32167@gmail.com", url("https://github.com/soujiro32167"))
 )
 
 ThisBuild / resolvers += "jitpack" at "https://jitpack.io"
-   
+
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 
 lazy val `zio-zip` = (project in file("."))
   .aggregate(`zio-zip-core`, `zio-zip-docs`)
-    .settings(
+  .settings(
     // crossScalaVersions must be set to Nil on the aggregating project
     // https://www.scala-sbt.org/1.x/docs/Cross-Build.html#Cross+building+a+project
     crossScalaVersions := Nil,
