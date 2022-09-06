@@ -17,7 +17,7 @@ object ZipCompressSpec extends DefaultRunnableSpec {
     testM("single entry") {
       val zipFile = Files.createTempFile("derp", ".zip")
       Stream("myfile" -> Stream.fromIterable("I am a file".getBytes))
-        .via(ZipCompress.zip())
+        .via(ZipCompress.zip0)
 //        .tap(c => console.putStrLn(s"producing chunk of length ${c.length}"))
         .run(ZSink.fromOutputStream(Files.newOutputStream(zipFile))) *>
         // .map(b => console.putStrLn(s"wrote $b bytes")) *>
@@ -31,7 +31,7 @@ object ZipCompressSpec extends DefaultRunnableSpec {
     testM("multi entry") {
       val zipFile = Files.createTempFile("derp", ".zip")
       Stream("myfile1" -> Stream.fromIterable("f1".getBytes), "myfile2" -> Stream.fromIterable("f2".getBytes))
-        .via(ZipCompress.zip())
+        .via(ZipCompress.zip0)
 //        .tap(c => console.putStrLn(s"producing chunk of length ${c.length}"))
         .run(ZSink.fromOutputStream(Files.newOutputStream(zipFile))) *>
         // .map(b => console.putStrLn(s"wrote $b bytes")) *>
@@ -52,7 +52,7 @@ object ZipCompressSpec extends DefaultRunnableSpec {
           }
         actual <- ZStream
           .fromInputStream(fruits.openStream())
-          .via(ZipCompress.unzip[Blocking]())
+          .via(ZipCompress.unzip())
           .mapM { case (name, content) =>
             content
               .transduce(ZTransducer.utf8Decode)
@@ -61,6 +61,17 @@ object ZipCompressSpec extends DefaultRunnableSpec {
           }
           .runCollect
       } yield assert(actual.toList)(equalTo(expected))
+    },
+    test("Supports sub streams with varying envs and errors"){
+      trait A
+      trait B
+      trait Error
+      trait ErrorSub extends Error
+      def toCompress: ZStream[Has[A], Error, (String, ZStream[Has[B], ErrorSub, Byte])] = ???
+      def errorMapper: Throwable => Error = ???
+      lazy val compressed: ZStream[Has[A] & Has[B] & Blocking, Error, Byte] =
+        toCompress.via(ZipCompress.zip(errorMapper = errorMapper))
+      assertCompletes
     }
   )
 }

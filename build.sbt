@@ -26,25 +26,11 @@ lazy val `zio-zip-core` = (project in file("zio-zip-core"))
       `dev.zio`.zio.`zio-streams`
     ),
     testFrameworks     := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-    crossScalaVersions := Seq(scala213, scala3)
+    crossScalaVersions := Seq(scala213, scala3),
+    scalacOptions ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, _)) => List("-Xsource:3")
+        case _ => Nil
+      }
+    }
   )
-
-lazy val docs = project
-  .in(file("zio-zip-docs"))
-  .settings(
-    publish / skip := true,
-    scalacOptions -= "-Yno-imports",
-    scalacOptions -= "-Xfatal-warnings",
-    libraryDependencies ++= Seq(`dev.zio`.zio.zio),
-    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(`zio-zip-core`),
-    ScalaUnidoc / unidoc / target := (LocalRootProject / baseDirectory).value / "website" / "static" / "api",
-    cleanFiles += (ScalaUnidoc / unidoc / target).value,
-    docusaurusCreateSite := docusaurusCreateSite
-      .dependsOn(Compile / unidoc)
-      .value,
-    docusaurusPublishGhpages := docusaurusPublishGhpages
-      .dependsOn(Compile / unidoc)
-      .value
-  )
-  .dependsOn(`zio-zip-core`)
-  .enablePlugins(MdocPlugin, DocusaurusPlugin, ScalaUnidocPlugin)
