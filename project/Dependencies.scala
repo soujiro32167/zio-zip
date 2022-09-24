@@ -3,11 +3,15 @@ import sbt._
 object Dependencies {
 
   case object `dev.zio` {
-    case object zio {
-      val zio           = "dev.zio" %% "zio"          % "1.0.15"
-      val test          = "dev.zio" %% "zio-test"     % "1.0.15" % "test"
-      val `test-sbt`    = "dev.zio" %% "zio-test-sbt" % "1.0.15" % "test"
-      val `zio-streams` = "dev.zio" %% "zio-streams"  % "1.0.15"
+
+    abstract class SomeZio(version: String){
+      val zio = "dev.zio" %% "zio" % version
+      val test = "dev.zio" %% "zio-test" % version % "test"
+      val `test-sbt` = "dev.zio" %% "zio-test-sbt" % version % "test"
+      val `zio-streams` = "dev.zio" %% "zio-streams" % version
     }
+    object zio1 extends SomeZio("1.0.16")
+
+    object zio extends SomeZio("2.0.2")
   }
 }
