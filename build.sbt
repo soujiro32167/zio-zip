@@ -30,7 +30,7 @@ lazy val `zio1-zip-core` = (project in file("zio1-zip-core"))
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, _)) => List("-Xsource:3")
-        case _ => Nil
+        case _            => Nil
       }
     }
   )
@@ -49,14 +49,11 @@ lazy val `zio-zip-core` = (project in file("zio-zip-core"))
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, _)) => List("-Xsource:3")
-        case _ => Nil
+        case _            => Nil
       }
     }
   )
 
 lazy val `zio-zip` = (project in file("."))
   .aggregate(`zio1-zip-core`, `zio-zip-core`)
-  .settings(
-    publish / skip := true,
-    crossScalaVersions := Nil
-  )
+  .settings(publish / skip := true, crossScalaVersions := Nil)

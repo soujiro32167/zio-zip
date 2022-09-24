@@ -19,10 +19,12 @@ object ZipCompressSpec extends ZIOSpecDefault {
         Files.createTempFile("derp", ".zip")
 
       val s = ZStream("myfile" -> ZStream.fromIterable("I am a file".getBytes))
-      val compressed = s.viaFunction(ZipCompress.zip())
+      val compressed = s
+        .viaFunction(ZipCompress.zip())
         .run(ZSink.fromOutputStream(Files.newOutputStream(zipFile)))
       compressed *>
-        ZIO.attempt(new ZipFile(zipFile.toFile))
+        ZIO
+          .attempt(new ZipFile(zipFile.toFile))
           .map(zip => zip -> zip.entries().asScala.toList)
           .map { case (zip, entries) =>
             entries.map(entry => entry.getName -> new String(zip.getInputStream(entry).readAllBytes()))
@@ -34,7 +36,8 @@ object ZipCompressSpec extends ZIOSpecDefault {
       ZStream("myfile1" -> ZStream.fromIterable("f1".getBytes), "myfile2" -> ZStream.fromIterable("f2".getBytes))
         .viaFunction(ZipCompress.zip())
         .run(ZSink.fromOutputStream(Files.newOutputStream(zipFile))) *>
-        ZIO.attempt(new ZipFile(zipFile.toFile))
+        ZIO
+          .attempt(new ZipFile(zipFile.toFile))
           .map(zip => zip -> zip.entries().asScala.toList)
           .map { case (zip, entries) =>
             entries.map(entry => entry.getName -> new String(zip.getInputStream(entry).readAllBytes()))
@@ -44,7 +47,8 @@ object ZipCompressSpec extends ZIOSpecDefault {
     test("unzip from premade file") {
       val fruits = getClass.getResource("/fruits.zip")
       for {
-        expected <- ZIO.attempt(new ZipFile(new File(fruits.toURI)))
+        expected <- ZIO
+          .attempt(new ZipFile(new File(fruits.toURI)))
           .map(zip => zip -> zip.entries().asScala.toList)
           .map { case (zip, entries) =>
             entries.map(entry => entry.getName -> new String(zip.getInputStream(entry).readAllBytes()))
@@ -52,17 +56,15 @@ object ZipCompressSpec extends ZIOSpecDefault {
         s = ZStream
           .fromInputStream(fruits.openStream())
           .viaFunction(ZipCompress.unzip())
-        actual <- s
-          .mapZIO { case (name, content) =>
-            content
-              .via(ZPipeline.utf8Decode)
-              .run(ZSink.foldLeft("")(_ + _))
-              .map(name -> _)
-          }
-          .runCollect
+        actual <- s.mapZIO { case (name, content) =>
+          content
+            .via(ZPipeline.utf8Decode)
+            .run(ZSink.foldLeft("")(_ + _))
+            .map(name -> _)
+        }.runCollect
       } yield assert(actual.toList)(equalTo(expected))
     },
-    test("Supports sub streams with varying envs and errors"){
+    test("Supports sub streams with varying envs and errors") {
       trait R1
       trait R2
       trait E1
@@ -71,11 +73,11 @@ object ZipCompressSpec extends ZIOSpecDefault {
       lazy val s: ZStream[R1 & R2, E1 | E2 | Throwable, Byte] =
         toCompress.viaFunction(ZipCompress.zip())
 
-      extension[R, E, A] (self: ZStream[R, E | Throwable, A])
+      extension [R, E, A](self: ZStream[R, E | Throwable, A])
         inline def orDiePartial(implicit trace: Trace): ZStream[R, E, A] =
           self.catchAll {
             case e: Throwable => ZStream.die(e)
-            case e: E => ZStream.fail(e)
+            case e: E         => ZStream.fail(e)
           }
 
       lazy val s2: ZStream[R1 & R2, E1 | E2, Byte] = s.orDiePartial

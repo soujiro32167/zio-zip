@@ -15,10 +15,9 @@ object implicits {
       self.pipe(ZipCompress.zip(errorMapper = errorMapper))
   }
 
-  implicit class ZStreamCompressThrowableOps[-R0, -R](val self: ZStream[R, Throwable, ZipEntry[R0, Throwable]]) extends AnyVal {
+  implicit class ZStreamCompressThrowableOps[-R0, -R](val self: ZStream[R, Throwable, ZipEntry[R0, Throwable]])
+      extends AnyVal {
     def compress: ZStream[R & R0 & Blocking, Throwable, Byte] =
       self.pipe(ZipCompress.zip0)
   }
 }
-
-
