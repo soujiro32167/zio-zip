@@ -1,7 +1,7 @@
 package io.soujiro32167
 
 import io.soujiro32167.models.*
-import zio.stream.{ZStream, *}
+import zio.stream.ZStream
 import zio.*
 
 import java.io.{ByteArrayOutputStream, IOException}
@@ -19,24 +19,15 @@ object ZipCompress {
 
   private[this] case class EndFile(zip: ZipOutputStream) extends Command
 
-  extension [R, E, A](self: ZStream[R, E, A])
-    def |++|[R1 <: R, E1, A1 >: A](that: => ZStream[R1, E1, A1])(implicit trace: Trace): ZStream[R1, E | E1, A1] =
-      self concat that
-
-    def flatMapE[R1 <: R, E1, B](f: A => ZStream[R1, E1, B])(implicit trace: Trace): ZStream[R1, E | E1, B] =
-      self.flatMap(f)
-
-    def widen[E1]: ZStream[R, E | E1, A] = self.asInstanceOf[ZStream[R, E | E1, A]]
-
-  def zip[R0, R, E, E0](
+  def zip[R0, R, E0, E >: E0](
     chunkSize: Int = ZStream.DefaultChunkSize
-  ): ZStream[R, E, ZipEntry[R0, E0]] => ZStream[R0 & R, E | E0 | Throwable, Byte] = { sources =>
+  ): ZStream[R, E, ZipEntry[R0, E0]] => ZStream[R0 & R, E, Byte] = { sources =>
     val jpipeline = for {
       baos <- ZIO.fromAutoCloseable(ZIO.succeed(new ByteArrayOutputStream(chunkSize)))
       zis  <- ZIO.fromAutoCloseable(ZIO.attempt(new ZipOutputStream(baos)))
     } yield (baos, zis)
 
-    ZStream.scoped(jpipeline).flatMap { case (baos, zipStream) =>
+    ZStream.scoped(jpipeline.orDie).flatMap { case (baos, zipStream) =>
       def nextZipChunk: Task[Chunk[Byte]] = ZIO.attemptBlocking {
         val zippedData = baos.toByteArray
         baos.reset()
@@ -52,13 +43,13 @@ object ZipCompress {
         case EndFile(zip)     => ZIO.attemptBlocking(zip.finish()) *> nextZipChunk
       }
 
-      val s = sources.flatMapE { case (fileName, content) =>
+      val s = sources.flatMap { case (fileName, content) =>
         ZStream.succeed(StartEntry(fileName, zipStream)) ++
           content.mapChunks(chunk => Chunk(AddDataToZipEntry(chunk, zipStream))) ++
           ZStream.succeed(EndEntry(fileName, zipStream))
       } ++ ZStream.succeed(EndFile(zipStream))
 
-      s.mapConcatChunkZIO(commandToBytes)
+      s.mapConcatChunkZIO(c => commandToBytes(c).orDie)
     }
   }
 
@@ -80,10 +71,10 @@ object ZipCompress {
         }
 
       ZStream
-        .scoped(
-          stream.toInputStream
-            .flatMap(is => ZIO.fromAutoCloseable(ZIO.succeed(new ZipInputStream(is))))
-        )
-        .flatMap(unzipEntries)
+        .scoped[R](for {
+          is  <- stream.toInputStream
+          zis <- ZIO.fromAutoCloseable(ZIO.succeed(new ZipInputStream(is)))
+        } yield unzipEntries(zis))
+        .flatten
   }
 }
